@@ -2,7 +2,7 @@
   "expo": {
     "name": "DeepSeek Harness",
     "slug": "deepseek-harness-mobile",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "orientation": "portrait",
     "scheme": "dsh",
     "userInterfaceStyle": "automatic",
@@ -35,7 +35,7 @@
     },
     "android": {
       "package": "com.deepseek.harness.mobile",
-      "versionCode": 9,
+      "versionCode": 10,
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF"

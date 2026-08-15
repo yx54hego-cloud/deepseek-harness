@@ -28,9 +28,11 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import { MobileClient, MobileRpcError, type ConnectionStatus } from './src/client'
 import {
   parsePairingInput,
+  projectActivity,
   projectTranscript,
   type ImageAttachmentLimits,
   type ImageMediaType,
+  type LiveActivity,
   type ModelCatalogModel,
   type ModelProviderGroup,
   type ModelSelection,
@@ -267,7 +269,7 @@ const copy = zh
   }
 
 interface HistoryValue {
-  events: { event: SessionEvent }[]
+  events: { event: SessionEvent; view?: unknown }[]
   hasMore: boolean
   projections?: { values: { imageLimits?: ImageAttachmentLimits } }
 }
@@ -531,6 +533,8 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedIdRef = useRef<string | null>(null)
   const [events, setEvents] = useState<SessionEvent[]>([])
+  const [liveEvents, setLiveEvents] = useState<SessionEvent[]>([])
+  const liveSeqRef = useRef(1_000_000_000_000)
   const [refreshing, setRefreshing] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [historyHasMore, setHistoryHasMore] = useState(false)
@@ -554,6 +558,7 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
   const lastAddedSession = useRef<{ sessionId: string; cwd?: string; at: number } | null>(null)
   const client = useMemo(() => new MobileClient(offer), [offer])
   const messages = useMemo(() => projectTranscript(events), [events])
+  const activities = useMemo(() => projectActivity([...events, ...liveEvents]), [events, liveEvents])
   const [imageSources, setImageSources] = useState<Record<string, string>>({})
   const fetchedImages = useRef(new Set<string>())
   const visibleSessions = useMemo(() => {
@@ -567,6 +572,7 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
     selectedIdRef.current = null
     setSelectedId(null)
     setEvents([])
+    setLiveEvents([])
     setHistoryHasMore(false)
     setLoadingOlder(false)
     setImageLimits(null)
@@ -650,6 +656,7 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
     selectedIdRef.current = sessionId
     setSelectedId(sessionId)
     setEvents([])
+    setLiveEvents([])
     setHistoryHasMore(false)
     setLoadingOlder(false)
     setLoadingHistory(true)
@@ -666,7 +673,11 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
     try {
       const value = await client.request<HistoryValue>('session.history', { sessionId, maxMessages: HISTORY_PAGE_MESSAGES })
       if (selectedIdRef.current !== sessionId) return
-      setEvents(value.events.map(entry => entry.event))
+      const loaded = value.events.map(entry => entry.view === undefined ? entry.event : { ...entry.event, view: entry.view })
+      setEvents((previous) => {
+        const known = new Set(loaded.map(event => event.seq))
+        return [...loaded, ...previous.filter(event => !known.has(event.seq))].sort((a, b) => a.seq - b.seq)
+      })
       setHistoryHasMore(value.hasMore)
       setImageLimits(value.projections?.values.imageLimits ?? null)
     } catch {
@@ -689,7 +700,7 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
         maxMessages: HISTORY_PAGE_MESSAGES,
       })
       if (selectedIdRef.current !== sessionId) return
-      const older = value.events.map(entry => entry.event)
+      const older = value.events.map(entry => entry.view === undefined ? entry.event : { ...entry.event, view: entry.view })
       setEvents((previous) => {
         const known = new Set(previous.map(event => event.seq))
         return [...older.filter(event => !known.has(event.seq)), ...previous].sort((a, b) => a.seq - b.seq)
@@ -724,6 +735,7 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
         type?: string
         sessionId?: string
         event?: SessionEvent
+        view?: unknown
         key?: string
         value?: unknown
         running?: boolean
@@ -733,14 +745,28 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
         archivedSessionIds?: unknown
       }
       if (payload.type === 'session/event' && payload.sessionId === selectedIdRef.current && payload.event !== undefined) {
-        setEvents(previous => previous.some(event => event.seq === payload.event?.seq)
+        const event = payload.view === undefined ? payload.event : { ...payload.event, view: payload.view }
+        setEvents(previous => previous.some(item => item.seq === event.seq)
           ? previous
-          : [...previous, payload.event as SessionEvent])
-        if (payload.event.type === 'user/message') {
+          : [...previous, event as SessionEvent])
+        if (event.type === 'user/message') {
           setSessions(previous => previous.map(session => session.sessionId === payload.sessionId
             ? { ...session, blank: false, updatedAt: Date.now() }
             : session))
         }
+      } else if (payload.sessionId === selectedIdRef.current && (payload.type === 'approval/requested' || payload.type === 'approval/resolved' || payload.type === 'question/requested' || payload.type === 'question/resolved')) {
+        const eventType = payload.type === 'approval/requested'
+          ? 'approval/asked'
+          : payload.type === 'approval/resolved'
+            ? 'approval/decided'
+            : payload.type
+        const event: SessionEvent = {
+          type: eventType,
+          seq: liveSeqRef.current++,
+          time: Date.now(),
+          data: payload,
+        }
+        setLiveEvents(previous => [...previous, event])
       } else if (payload.type === 'session/projection' && payload.key === 'title' && typeof payload.sessionId === 'string') {
         setSessions(previous => previous.map(session => session.sessionId === payload.sessionId
           ? { ...session, projections: { asOfSeq: Number.MAX_SAFE_INTEGER, values: { title: typeof payload.value === 'string' ? payload.value : null } } }
@@ -977,6 +1003,7 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
         loading={selectedId !== null && loadingHistory}
         loadingOlder={loadingOlder}
         messages={selectedId === null ? [] : messages}
+        activities={selectedId === null ? [] : activities}
         modelLabel={modelLabel}
         modelLoading={modelSelecting}
         imageSources={imageSources}
@@ -1110,10 +1137,11 @@ function SessionApp({ offer, theme, styles, onForget, onOpenDevices }: SharedScr
 
 /** Persistent conversation surface beneath the navigation drawer. */
 function ConversationScreen({
-  draft, draftImages, emptyBody, error, hasMore, imageSources, loading, loadingOlder, messages, modelLabel, modelLoading,
+  activities, draft, draftImages, emptyBody, error, hasMore, imageSources, loading, loadingOlder, messages, modelLabel, modelLoading,
   onAttach, onCompose, onDraft, onLoadOlder, onMenu, onMore, onOpenModels, onRemoveImage, onSend,
   selected, sending, status, styles, theme,
 }: SharedScreenProps & {
+  activities: LiveActivity[]
   draft: string
   draftImages: readonly DraftImage[]
   emptyBody: string
@@ -1144,13 +1172,21 @@ function ConversationScreen({
   const initialScrollScheduled = useRef(false)
   const [initialScrollComplete, setInitialScrollComplete] = useState(false)
   const canSend = selected && (draft.trim().length > 0 || draftImages.length > 0) && status === 'connected' && !sending
+  const latestMessage = messages.at(-1)
+  const latestTurnIndex = [...activities].map(activity => activity.kind).lastIndexOf('turn')
+  const inlineActivities = activities.slice(latestTurnIndex >= 0 ? latestTurnIndex : Math.max(0, activities.length - 8)).slice(-8)
+  const activityInFlight = inlineActivities.some(activity => activity.status === 'active' || activity.status === 'waiting')
+  const inlineMessageId = latestMessage?.role === 'assistant' && inlineActivities.length > 0 ? latestMessage.id : null
+  const showInlineActivities = inlineActivities.length > 0 && (activityInFlight || inlineMessageId !== null)
   useEffect(() => {
     const last = messages.at(-1)
-    const signature = last === undefined ? null : `${last.id}:${String(last.text.length)}:${String(last.streaming === true)}`
+    const lastActivity = activities.at(-1)
+    const signature = `${last === undefined ? '' : `${last.id}:${String(last.text.length)}:${String(last.streaming === true)}`}`
+      + `|${lastActivity === undefined ? '' : `${lastActivity.id}:${lastActivity.status}:${String(lastActivity.detail?.length ?? 0)}`}`
     if (signature === lastMessageSignatureRef.current) return
     lastMessageSignatureRef.current = signature
     shouldScrollToEnd.current = true
-  }, [messages])
+  }, [activities, messages])
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar style={theme.background === '#151517' ? 'light' : 'dark'} />
@@ -1160,7 +1196,7 @@ function ConversationScreen({
           ? <View style={styles.center}><ActivityIndicator color={theme.blue} /></View>
           : <FlatList
             ref={listRef}
-            contentContainerStyle={messages.length === 0 ? styles.emptyConversation : styles.messageList}
+            contentContainerStyle={messages.length === 0 && !showInlineActivities ? styles.emptyConversation : styles.messageList}
             data={messages}
             keyExtractor={message => message.id}
             maintainVisibleContentPosition={initialScrollComplete ? { minIndexForVisible: 0 } : undefined}
@@ -1182,7 +1218,16 @@ function ConversationScreen({
               shouldScrollToEnd.current = false
               listRef.current?.scrollToEnd({ animated: false })
             }}
-            renderItem={({ item }) => <MessageRow imageSources={imageSources} message={item} styles={styles} theme={theme} />}
+            renderItem={({ item }) => <MessageRow
+              activities={item.id === inlineMessageId ? inlineActivities : []}
+              imageSources={imageSources}
+              message={item}
+              styles={styles}
+              theme={theme}
+            />}
+            ListFooterComponent={showInlineActivities && inlineMessageId === null
+              ? <InlineAssistantProcess activities={inlineActivities} styles={styles} theme={theme} />
+              : null}
             ListHeaderComponent={hasMore || loadingOlder
               ? <View style={styles.historyHeader}>
                 <Pressable
@@ -1939,13 +1984,53 @@ function ConnectionPill({ status, styles, compact = false }: {
   )
 }
 
+/** Renders host progress in the same assistant bubble as the streaming reply. */
+function InlineAssistantProcess({ activities, styles, theme }: SharedScreenProps & {
+  activities: readonly LiveActivity[]
+}): React.JSX.Element {
+  return (
+    <View style={styles.assistantMessageAlign} accessibilityLiveRegion="polite">
+      <View style={styles.assistantAvatar}>
+        <ReferenceIcon color={theme.text} icon="assistantWhale" />
+      </View>
+      <View style={[styles.assistantBubble, styles.assistantBubbleProcess]}>
+        <InlineActivityRows activities={activities} styles={styles} theme={theme} />
+      </View>
+    </View>
+  )
+}
+
+/** Interleaves context, thinking, tools, and waiting states before assistant text. */
+function InlineActivityRows({ activities, styles }: SharedScreenProps & {
+  activities: readonly LiveActivity[]
+}): React.JSX.Element {
+  return (
+    <View style={styles.inlineActivities} accessibilityLiveRegion="polite">
+      {activities.map((activity, index) => (
+        <View key={activity.id} style={[styles.inlineActivityRow, index > 0 && styles.inlineActivityRowSeparated]}>
+          <View style={[styles.inlineActivityMarker, activity.status === 'active' && styles.inlineActivityMarkerActive, activity.status === 'waiting' && styles.inlineActivityMarkerWaiting, activity.status === 'error' && styles.inlineActivityMarkerError]} />
+          <View style={styles.inlineActivityCopy}>
+            <Text style={styles.inlineActivityTitle}>{activity.title}</Text>
+            {activity.detail !== undefined && activity.detail.length > 0 && (
+              <Text selectable numberOfLines={4} style={styles.inlineActivityDetail}>{activity.detail}</Text>
+            )}
+          </View>
+          <Text style={styles.inlineActivityStatus}>{activity.status === 'active' ? '…' : activity.status === 'waiting' ? '?' : activity.status === 'error' ? '!' : '✓'}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
 /** One selectable plain-text message row. */
 function MessageRow({
+  activities,
   imageSources,
   message,
   styles,
   theme,
 }: SharedScreenProps & {
+  activities: readonly LiveActivity[]
   imageSources: Readonly<Record<string, string>>
   message: TranscriptMessage
 }): React.JSX.Element {
@@ -1978,6 +2063,7 @@ function MessageRow({
         <ReferenceIcon color={theme.text} icon="assistantWhale" />
       </View>
       <View style={styles.assistantBubble}>
+        {activities.length > 0 && <InlineActivityRows activities={activities} styles={styles} theme={theme} />}
         {message.text.length > 0 && <Text selectable style={styles.messageText}>{message.text}{message.streaming ? ' ▍' : ''}</Text>}
         {imageViews}
       </View>
@@ -2055,6 +2141,17 @@ function createStyles(theme: Theme) {
     historyHeader: { alignItems: 'center', paddingBottom: 4 },
     loadOlderButton: { minHeight: 48, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
     loadOlderText: { color: theme.blue, fontSize: 14, lineHeight: 20, fontWeight: '600' },
+    inlineActivities: { marginBottom: 10, gap: 8 },
+    inlineActivityRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingVertical: 2 },
+    inlineActivityRowSeparated: { paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border },
+    inlineActivityMarker: { width: 8, height: 8, marginTop: 6, borderRadius: 4, backgroundColor: theme.green },
+    inlineActivityMarkerActive: { backgroundColor: theme.blue },
+    inlineActivityMarkerWaiting: { backgroundColor: theme.amber },
+    inlineActivityMarkerError: { backgroundColor: theme.red },
+    inlineActivityCopy: { flex: 1, gap: 1 },
+    inlineActivityTitle: { color: theme.secondary, fontSize: 13, lineHeight: 18, fontWeight: '600' },
+    inlineActivityDetail: { color: theme.tertiary, fontSize: 13, lineHeight: 18 },
+    inlineActivityStatus: { minWidth: 18, color: theme.tertiary, fontSize: 13, lineHeight: 18, textAlign: 'right' },
     emptyConversation: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
     conversationEmptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
     userMessageAlign: { alignItems: 'flex-end' },
@@ -2062,6 +2159,7 @@ function createStyles(theme: Theme) {
     userBubble: { maxWidth: '78%', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, backgroundColor: theme.surface },
     assistantAvatar: { width: 40, height: 40, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.elevated },
     assistantBubble: { flexShrink: 1, maxWidth: '82%', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border, backgroundColor: theme.background },
+    assistantBubbleProcess: { flexGrow: 1 },
     messageText: { color: theme.text, fontSize: 15, lineHeight: 23 },
     messageImages: { marginTop: 8, gap: 8 },
     messageImage: { width: 220, height: 160, borderRadius: 12, backgroundColor: theme.surface },

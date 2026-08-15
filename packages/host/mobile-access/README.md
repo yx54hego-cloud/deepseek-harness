@@ -6,6 +6,10 @@ Authenticated, end-to-end encrypted WebSocket carrier for the minimal DeepSeek H
 
 The Web bundle enables this plugin on `0.0.0.0:6769`, uses the IPv4 address selected by the operating system's default route for the pairing offer, and prints `dsh://pair?code=...` plus a terminal QR. A deployment can override `enabled`, `host`, `port`, `advertiseHost`, `dshHome`, `printPairingCode`, or the encrypted-frame `maxPayloadBytes` ceiling in its patch. Startup fails with a correction when several LAN addresses exist and the default route cannot disambiguate them; configure `advertiseHost` for that case.
 
+## Installation
+
+The standard Web profile mounts this package automatically through [`packages/bundle/web-app/cordis.patch.yml`](../../bundle/web-app/cordis.patch.yml). Start `dsh web`, then scan the printed QR code from [`apps/mobile`](../../../apps/mobile/README.md). A custom Cordis composition must include this package in its resolver manifest and mount the `mobile-access` plugin once with its desired configuration; it must not start a second listener.
+
 ## Pairing and encryption
 
 The pairing offer follows Orca's compact custom-scheme pattern: base64url JSON in the `code` query parameter. It contains the direct `ws://` endpoint, a persistent host id, a bearer token, and the pinned Curve25519 host public key. The token is stored in owner-only `$DSH_HOME/mobile/identity.json` and is never sent before encryption.

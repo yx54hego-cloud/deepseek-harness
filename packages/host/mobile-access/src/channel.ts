@@ -132,11 +132,15 @@ const mobileRequestSchema = z.discriminatedUnion('method', [
   archivedSessionsRequestSchema,
 ])
 
-/** Mux events needed to keep the minimal conversation surface current. */
+/** Mux events needed to mirror the conversation transcript and live process surface. */
 function isMobileMuxFrame(frame: MuxFrame): boolean {
   return frame.type === 'session/event'
     || frame.type === 'session/subscribed'
     || frame.type === 'session/projection'
+    || frame.type === 'approval/requested'
+    || frame.type === 'approval/resolved'
+    || frame.type === 'question/requested'
+    || frame.type === 'question/resolved'
 }
 
 /** Host lifecycle frames used by the mobile session list, excluding unrelated host state. */

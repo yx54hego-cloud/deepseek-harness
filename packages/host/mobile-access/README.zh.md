@@ -6,6 +6,10 @@
 
 Web bundle 会在 `0.0.0.0:6769` 启用该插件，使用操作系统默认路由选择的 IPv4 地址生成配对信息，并打印 `dsh://pair?code=...` 与终端二维码。部署可以在 patch 中覆盖 `enabled`、`host`、`port`、`advertiseHost`、`dshHome`、`printPairingCode` 或加密帧上限 `maxPayloadBytes`。如果存在多个局域网地址且默认路由无法消除歧义，启动会给出修正提示并失败；此时必须明确配置 `advertiseHost`。
 
+## 安装
+
+标准 Web profile 会通过 [`packages/bundle/web-app/cordis.patch.yml`](../../bundle/web-app/cordis.patch.yml) 自动挂载本包。运行 `dsh web`，然后使用 [`apps/mobile`](../../../apps/mobile/README.md) 中的手机应用扫描终端二维码。自定义 Cordis 组合必须在 resolver manifest 中包含本包，并按所需配置挂载一次 `mobile-access` 插件；不要重复启动第二个监听器。
+
 ## 配对与加密
 
 配对信息沿用 Orca 的紧凑自定义 scheme 形式：`code` 查询参数中放置 base64url JSON。内容包括直接 `ws://` 端点、持久主机 id、bearer token 和固定的 Curve25519 主机公钥。token 保存在仅所有者可读的 `$DSH_HOME/mobile/identity.json`，并且绝不会在加密建立前发送。

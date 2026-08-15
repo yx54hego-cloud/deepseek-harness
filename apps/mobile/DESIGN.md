@@ -24,6 +24,7 @@ Every screen respects safe-area and keyboard insets. After pairing, the conversa
 - Pairing intake: primary QR scan action, secondary paste field, and one short security explanation.
 - Session row: one-line title, conversation icon, selected fill, and running indicator inside the drawer.
 - Message bubble: user messages use a quiet raised fill; assistant messages pair a brand avatar with a bordered reading surface.
+- Inline assistant progress: context injection, thinking, steps, tools, approvals, and questions appear in the assistant bubble in Web event order, followed by the streaming reply; there is no separate process panel.
 - Composer: one capsule containing reserved attachment, multiline input, model label, reserved microphone, and one 48-point text-send target; the empty target displays the approved blue waveform artwork, and text send is disabled while empty, disconnected, or submitting.
 
 The brand lockup, whale, navigation glyphs, workspace glyphs, microphone, and voice artwork are transparent raster assets extracted from the approved mobile composition. Product chrome does not substitute glyphs from a generic icon font.

@@ -108,6 +108,8 @@ function applyFakeApi(ctx: Context): void {
     events: {
       mux: async function* ({ rpcId }: { rpcId: RpcId }, signal: AbortSignal) {
         yield { rpcId, payload: { type: 'session/subscribed' as const, sessionId: 'session-1', lastSeq: 0 } }
+        yield { rpcId, payload: { type: 'approval/requested' as const, sessionId: 'session-1', approvalId: 'approval-1', toolName: 'read', reason: 'Needs permission' } }
+        yield { rpcId, payload: { type: 'question/requested' as const, sessionId: 'session-1', questions: [{ id: 'question-1', question: 'Proceed?' }] } }
         await waitForAbort(signal)
       },
       host: async function* ({ rpcId }: { rpcId: RpcId }, signal: AbortSignal) {
@@ -207,10 +209,12 @@ describe('mobile-access real composition', () => {
 
     const first = JSON.parse(decrypt(await inbox.next(), sharedKey) ?? 'null') as { type?: string }
     expect(first).toEqual({ type: 'e2ee_authenticated' })
-    const events = await Promise.all([inbox.next(), inbox.next(), inbox.next()])
+    const events = await Promise.all([inbox.next(), inbox.next(), inbox.next(), inbox.next(), inbox.next()])
     const methods = events.map(frame =>
       (JSON.parse(decrypt(frame, sharedKey) ?? 'null') as { method?: string }).method)
-    expect(methods.sort()).toEqual(['host/archived-sessions-changed', 'host/session-status', 'session/subscribed'])
+    expect(methods.sort()).toEqual([
+      'approval/requested', 'host/archived-sessions-changed', 'host/session-status', 'question/requested', 'session/subscribed',
+    ])
 
     socket.send(encrypt(JSON.stringify({ type: 'client-request', rpcId: 'list-1', method: 'session.list', payload: {} }), sharedKey))
     const list = JSON.parse(decrypt(await inbox.next(), sharedKey) ?? 'null') as { result?: { value?: { items?: unknown[] } } }
