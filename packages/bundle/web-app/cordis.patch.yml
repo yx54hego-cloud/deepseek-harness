@@ -107,6 +107,18 @@
     - id: web-startup
       name: '@deepseek-ai/dsh-web-app/startup'
 
+    # Authenticated and encrypted companion carrier. The row stays dormant
+    # unless this invocation explicitly passes --mobile.
+    - id: mobile-access
+      name: '@deepseek-ai/dsh-host-mobile-access'
+      inject: [webStartup]
+      config:
+        enabled: !!js ctx.webStartup.mobile
+        host: '0.0.0.0'
+        port: 6769
+        advertiseHost: !!js ctx.webStartup.mobileAdvertiseHost
+        printPairingCode: true
+
     # ── layer 2: transport/service ──────────────────────────────────────────────
 
     # Plain route-registration carrier; host and port come from the app's

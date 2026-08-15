@@ -50,6 +50,10 @@ Here are some core packages that contribute to the Cordis tree.
 | [`core/scope`](subsystems/scope.md) | The per-agent scoped-registration primitive | library, no key |
 | [`llm/llm`](subsystems/llm-streaming.md) | Message and stream vocabulary plus the adapter seam | `ctx.llm` |
 
+## Client carriers
+
+[`host/apiproxy`](../packages/host/apiproxy/README.md) is the transport-independent client gateway. The browser carrier mounts its HTTP and event routes on the loopback Web server; its Host/Origin fence is reachability policy, not authentication, so the CLI does not publish that server on all interfaces. The optional [`host/mobile-access`](../packages/host/mobile-access/README.md) plugin instead owns a separate LAN WebSocket, authenticates a paired installation inside a Curve25519/XSalsa20-Poly1305 channel, and forwards only Session list, paged history, archived ids, plain-text prompt, and the events needed by that narrow surface. Both carriers call the same gateway, so a phone prompt is one durable `user/message` observed by the browser rather than a second conversation state.
+
 ## Events
 
 Events are the extension points, and picking the right domain is the first decision in most changes.

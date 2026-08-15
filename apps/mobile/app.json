@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "DeepSeek Harness",
+    "slug": "deepseek-harness-mobile",
+    "version": "0.1.8",
+    "orientation": "portrait",
+    "scheme": "dsh",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "./plugins/with-android-manifest.cjs",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow DeepSeek Harness to scan a pairing QR code."
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow DeepSeek Harness to protect the paired host."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.deepseek.harness.mobile",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "DeepSeek Harness connects to your paired computer on the local network.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        },
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.deepseek.harness.mobile",
+      "versionCode": 9,
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      }
+    }
+  }
+}

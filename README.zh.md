@@ -22,6 +22,8 @@ npx @deepseek-ai/dsh web
 
 该命令会启动 Web UI，默认地址为 `http://127.0.0.1:3080`。详见 [Web UI 指南](docs/user/guide/index.md)。
 
+如需启用可选的局域网手机伴侣，请用 `dsh web --mobile` 启动 Web profile，再从 [`apps/mobile`](apps/mobile/README.md) 扫描终端二维码。浏览器仍然只绑定回环地址；手机使用独立的已认证、端到端加密 Session 载体。
+
 ### 从源码运行
 
 如需从仓库源码运行：

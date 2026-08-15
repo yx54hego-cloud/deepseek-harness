@@ -21,6 +21,7 @@
 
 ```sh
 dsh --profile web --port 8080       # --port belongs to the web app
+dsh web --mobile                    # enable the encrypted mobile companion carrier
 dsh --profile tui --resume <id>     # example, assuming the tui profile is installed; --resume belongs to the terminal app
 dsh --profile headless "run the tests"
 dsh --profile web --help            # the web app's flags, not the launcher's

@@ -726,6 +726,17 @@
         "react-dom"
       ]
     },
+    "apps/mobile": {
+      "entry": [
+        "App.tsx",
+        "tests/**/*.spec.ts",
+        "tests/**/*.snapshot.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "tests/**/*.ts"
+      ]
+    },
     "apps/cli": {
       "entry": [
         "tests/**/*.spec.ts",

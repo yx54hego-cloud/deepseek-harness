@@ -785,6 +785,34 @@ export interface Config {
 
 Source: [`packages/host/frontend-static/src/index.ts:28`](../packages/host/frontend-static/src/index.ts)
 
+<a id="deepseek-aidsh-host-mobile-access"></a>
+
+## `@deepseek-ai/dsh-host-mobile-access`
+
+Requires: `apiProxy`
+
+```ts config-catalog
+/** Mobile listener configuration. */
+export interface Config {
+  /** Whether this composition should bind the mobile listener. */
+  enabled: boolean
+  /** Listen host. All interfaces is safe only because every application frame is authenticated and encrypted. */
+  host: '127.0.0.1' | '0.0.0.0'
+  /** Listen port; zero asks the OS for a free port. */
+  port: number
+  /** Host or IP embedded in the pairing offer; omitted uses the operating system's default-route IPv4. */
+  advertiseHost?: string
+  /** Optional Harness home override for the persistent mobile identity. */
+  dshHome?: string
+  /** Print the pairing URL and terminal QR after the listener binds. */
+  printPairingCode: boolean
+  /** Maximum encrypted WebSocket frame bytes accepted from one phone. */
+  maxPayloadBytes: number
+}
+```
+
+Source: [`packages/host/mobile-access/src/index.ts:24`](../packages/host/mobile-access/src/index.ts)
+
 <a id="deepseek-aidsh-host-webserver"></a>
 
 ## `@deepseek-ai/dsh-host-webserver`

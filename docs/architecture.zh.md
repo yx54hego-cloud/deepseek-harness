@@ -50,6 +50,10 @@ dsh --profile web --dump-config
 | [`core/scope`](subsystems/scope.md) | 按 agent 划分作用域的注册原语 | 库，无 ctx 键 |
 | [`llm/llm`](subsystems/llm-streaming.md) | 消息与流式词汇表，以及适配器 seam | `ctx.llm` |
 
+## 客户端载体
+
+[`host/apiproxy`](../packages/host/apiproxy/README.md) 是与传输无关的客户端网关。浏览器载体把 HTTP 与事件路由挂载到回环 Web 服务器；它的 Host/Origin 栅栏属于可达性策略而不是认证，因此 CLI 不会把该服务器发布到所有网络接口。可选的 [`host/mobile-access`](../packages/host/mobile-access/README.md) 插件则持有独立的局域网 WebSocket，在 Curve25519/XSalsa20-Poly1305 通道内认证已配对安装，并且只转发 Session 列表、分页历史、归档 id、纯文本提示以及该窄表层所需的事件。两种载体调用同一个网关，因此手机提示会成为浏览器也能观察到的一条持久 `user/message`，而不是第二份会话状态。
+
 <a id="events"></a>
 
 ## 事件
