@@ -4,7 +4,7 @@
 
 面向 DeepSeek Harness 最小手机伴侣的已认证、端到端加密 WebSocket 载体。该载体使用独立于浏览器服务器的监听端口，并复用 `ctx.apiProxy` 提供 Session 列表、分页历史、每个 Session 的模型目录与选择，以及 queue 模式下包含文字和图片的 `session.prompt`。载体专用的 `mobile.archivedSessions` 只返回全局归档 Session id。实时流只转发让手机保持最新所需的 Session 事件、标题、运行状态与归档集合变化。浏览器路由、文件、终端、工具、设置、工作区内容与操作、审批以及响应接口均不会暴露。
 
-默认 Web bundle 保持该插件休眠。`dsh web --mobile` 会在 `0.0.0.0:6769` 启用它，使用操作系统默认路由选择的 IPv4 地址生成配对信息，并打印 `dsh://pair?code=...` 与终端二维码。部署可以在 patch 中覆盖 `enabled`、`host`、`port`、`advertiseHost`、`dshHome`、`printPairingCode` 或加密帧上限 `maxPayloadBytes`。如果存在多个局域网地址且默认路由无法消除歧义，启动会给出修正提示并失败；此时必须明确配置 `advertiseHost`。
+Web bundle 会在 `0.0.0.0:6769` 启用该插件，使用操作系统默认路由选择的 IPv4 地址生成配对信息，并打印 `dsh://pair?code=...` 与终端二维码。部署可以在 patch 中覆盖 `enabled`、`host`、`port`、`advertiseHost`、`dshHome`、`printPairingCode` 或加密帧上限 `maxPayloadBytes`。如果存在多个局域网地址且默认路由无法消除歧义，启动会给出修正提示并失败；此时必须明确配置 `advertiseHost`。
 
 ## 配对与加密
 

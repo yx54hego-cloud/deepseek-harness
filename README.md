@@ -22,7 +22,7 @@ npx @deepseek-ai/dsh web
 
 The command starts the Web UI, served at `http://127.0.0.1:3080` by default. See [Web UI guide](docs/user/guide/index.md).
 
-To enable the optional LAN-only mobile companion, start the Web profile with `dsh web --mobile`, then scan the terminal QR from [`apps/mobile`](apps/mobile/README.md). The browser remains loopback-only; the phone uses a separate authenticated and end-to-end encrypted Session carrier.
+The Web profile mounts the LAN-only mobile companion by default. Scan the terminal QR from [`apps/mobile`](apps/mobile/README.md). The browser remains loopback-only; the phone uses a separate authenticated and end-to-end encrypted Session carrier.
 
 ### Run from source
 

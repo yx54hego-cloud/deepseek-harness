@@ -519,7 +519,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     title: 'Encrypted mobile Session carrier',
     mode: 'core',
     consumers: [],
-    note: 'Owns pairing, authentication, encryption, and the narrow Session request allowlist for the optional phone connection.',
+    note: "Owns pairing, authentication, encryption, and the narrow Session request allowlist for the Web bundle's phone connection.",
   },
   {
     key: 'clientModules',

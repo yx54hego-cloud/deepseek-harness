@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-14-mobile-companion-carrier.md
-2026-08-14-mobile-companion-carrier.md: 7f4278d5f4837ee54e614eba03bfb9efcdceb51b
-2026-08-14-mobile-companion-carrier.zh.md: 028aa99991877faec8356fd0a44c27e2957fe557
+2026-08-14-mobile-companion-carrier.md: 45701f077e0221393dc82bf42a6b8f2247103c3d
+2026-08-14-mobile-companion-carrier.zh.md: e7e321674541fe09fa3d1a3ebbb1c4b0f732d8b1

@@ -1,6 +1,6 @@
 /**
  * The web app's command-line provider: it parses the `dsh --profile web` flag
- * family (`--host`, `--port`, `--trusted-host`, `--mobile`) and its `--help`
+ * family (`--host`, `--port`, `--trusted-host`) and its `--help`
  * text, then provides the immutable values as {@link WEB_STARTUP_SERVICE}.
  * Ordinary rows inject that service before reading it from lazy config.
  * @module @deepseek-ai/dsh-web-app/startup
@@ -27,10 +27,6 @@ export interface WebStartupValues {
   port?: number
   /** Explicit `--trusted-host` authorities, in argument order. */
   trustedHosts: string[]
-  /** Whether to start the authenticated mobile companion listener. */
-  mobile: boolean
-  /** Explicit LAN address embedded in the mobile pairing offer. */
-  mobileAdvertiseHost?: string
 }
 
 /** The web flag family, as commander parsed it. */
@@ -38,8 +34,6 @@ interface WebOptions {
   host?: string
   port?: string
   trustedHost?: string[]
-  mobile?: boolean
-  mobileAdvertiseHost?: string
 }
 
 /**
@@ -54,13 +48,10 @@ function webCommand(): Command {
     .option('--host <host>', 'bind host')
     .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
-    .option('--mobile', 'enable encrypted LAN access for the mobile companion')
-    .option('--mobile-advertise-host <host>', 'LAN address embedded in the mobile pairing QR')
     .addHelpText('after', `
 Examples:
   dsh --profile web                          serve on the composed host and port
   dsh --profile web --port 8080              serve on another port
-  dsh web --mobile                           serve the browser UI and print a mobile pairing QR
 `)
 }
 
@@ -85,8 +76,6 @@ export function apply(ctx: Context): void {
       ...options.host !== undefined && { host: options.host },
       ...options.port !== undefined && { port: Number(options.port) },
       trustedHosts: options.trustedHost ?? [],
-      mobile: options.mobile ?? false,
-      ...options.mobileAdvertiseHost !== undefined && { mobileAdvertiseHost: options.mobileAdvertiseHost },
     } satisfies WebStartupValues)
   })
   parseCmdline(ctx, program)

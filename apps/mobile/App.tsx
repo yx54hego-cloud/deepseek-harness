@@ -100,7 +100,7 @@ const copy = zh
   ? {
     app: 'DeepSeek Harness',
     pairTitle: '连接你的电脑',
-    pairBody: '在电脑上运行 dsh web --mobile，然后扫描终端中的二维码。',
+    pairBody: '在电脑上运行 dsh web，然后扫描终端中的二维码。',
     scan: '扫描配对二维码',
     paste: '或粘贴配对链接',
     connect: '连接',
@@ -184,7 +184,7 @@ const copy = zh
   : {
     app: 'DeepSeek Harness',
     pairTitle: 'Connect your computer',
-    pairBody: 'Run dsh web --mobile on your computer, then scan the QR code printed in the terminal.',
+    pairBody: 'Run dsh web on your computer, then scan the QR code printed in the terminal.',
     scan: 'Scan pairing QR',
     paste: 'Or paste a pairing link',
     connect: 'Connect',

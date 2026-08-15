@@ -52,7 +52,7 @@ dsh --profile web --dump-config
 
 ## 客户端载体
 
-[`host/apiproxy`](../packages/host/apiproxy/README.md) 是与传输无关的客户端网关。浏览器载体把 HTTP 与事件路由挂载到回环 Web 服务器；它的 Host/Origin 栅栏属于可达性策略而不是认证，因此 CLI 不会把该服务器发布到所有网络接口。可选的 [`host/mobile-access`](../packages/host/mobile-access/README.md) 插件则持有独立的局域网 WebSocket，在 Curve25519/XSalsa20-Poly1305 通道内认证已配对安装，并且只转发 Session 列表、分页历史、归档 id、纯文本提示以及该窄表层所需的事件。两种载体调用同一个网关，因此手机提示会成为浏览器也能观察到的一条持久 `user/message`，而不是第二份会话状态。
+[`host/apiproxy`](../packages/host/apiproxy/README.md) 是与传输无关的客户端网关。浏览器载体把 HTTP 与事件路由挂载到回环 Web 服务器；它的 Host/Origin 栅栏属于可达性策略而不是认证，因此 CLI 不会把该服务器发布到所有网络接口。Web bundle 中的 [`host/mobile-access`](../packages/host/mobile-access/README.md) 插件持有独立的局域网 WebSocket，在 Curve25519/XSalsa20-Poly1305 通道内认证已配对安装，并且只转发 Session 列表、分页历史、归档 id、纯文本提示以及该窄表层所需的事件。两种载体调用同一个网关，因此手机提示会成为浏览器也能观察到的一条持久 `user/message`，而不是第二份会话状态。
 
 <a id="events"></a>
 

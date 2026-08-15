@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-dsh 浏览器表层组合包。[`cordis.patch.yml`](cordis.patch.yml) 叠加在 [`dsh-base`](../base/README.md) 之上：设置 coding persona，插入 Web 宿主行（webserver、API 网关、workspace、投影缓存、存储）与浏览器插件名录，并挂载本包的 `web-runtime` 粘合插件。它还带有默认禁用的 [`mobile-access`](../../host/mobile-access/README.md) 行。普通 `web-startup` 提供方解析 `--host`、`--port`、可重复的 `--trusted-host`、`--mobile` 以及应用自己的 `--help`，再提供 `webStartup`；`--mobile` 只激活独立的已认证加密载体，绝不会改变浏览器的回环绑定。由 flag 配置的行从惰性配置读取该服务，因此参数解析完成前不会有服务器绑定端口，`dsh --profile web --help` 也不会启动服务器。始终挂载的客户端 HMR 链在重建 watcher 改写客户端 bundle 之前保持空闲。[`dsh-headless`](../headless/README.md) 是同一 base 之上的同级表层，既不挂载浏览器载体，也不挂载手机载体。
+dsh 浏览器表层组合包。[`cordis.patch.yml`](cordis.patch.yml) 叠加在 [`dsh-base`](../base/README.md) 之上：设置 coding persona，插入 Web 宿主行（webserver、API 网关、workspace、投影缓存、存储）与浏览器插件名录，挂载本包的 `web-runtime` 粘合插件，并在 6769 端口启动已认证加密的 [`mobile-access`](../../host/mobile-access/README.md) 载体。普通 `web-startup` 提供方解析 `--host`、`--port`、可重复的 `--trusted-host` 以及应用自己的 `--help`，再提供 `webStartup`；手机监听不会改变浏览器的回环绑定。始终挂载的客户端 HMR 链在重建 watcher 改写客户端 bundle 之前保持空闲。[`dsh-headless`](../headless/README.md) 是同一 base 之上的同级表层，既不挂载浏览器载体，也不挂载手机载体。
 
 ## 模型体验
 

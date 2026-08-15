@@ -107,16 +107,14 @@
     - id: web-startup
       name: '@deepseek-ai/dsh-web-app/startup'
 
-    # Authenticated and encrypted companion carrier. The row stays dormant
-    # unless this invocation explicitly passes --mobile.
+    # Authenticated and encrypted companion carrier. Mounting the Web bundle
+    # starts the phone listener and prints its pairing material.
     - id: mobile-access
       name: '@deepseek-ai/dsh-host-mobile-access'
-      inject: [webStartup]
       config:
-        enabled: !!js ctx.webStartup.mobile
+        enabled: true
         host: '0.0.0.0'
         port: 6769
-        advertiseHost: !!js ctx.webStartup.mobileAdvertiseHost
         printPairingCode: true
 
     # ── layer 2: transport/service ──────────────────────────────────────────────

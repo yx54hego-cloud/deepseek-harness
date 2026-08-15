@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决策
 
-新增 `dsh-host-mobile-access`，作为复用现有、与传输无关的 `ctx.apiProxy` 的独立可选载体。`dsh web --mobile` 激活它自己的全接口 WebSocket 监听器，同时浏览器服务器仍然只绑定回环地址。该载体只接受 `session.list`、`session.history`、`session.models`、`session.selectModel`、queue 模式下包含文字及四种既有光栅图片格式的 `session.prompt`，以及载体专用的 `mobile.archivedSessions` 读取；最后一个方法只从 `workspace.list` 投影归档 Session id。它只转发该表层所需的 Session 事件、标题、运行状态、归档集合与宿主生命周期帧。Host 会先校验 allowlist 与 payload 限制，再把已接受的 Session 请求交给现有 fetch 载体，因此修改过的手机也无法绕过同样的限制或读取工作区内容。默认加密帧上限为 8 MiB；手机把图片总字节限制为 5 MiB，使 base64 膨胀与请求包络仍保持在上限内。
+新增 `dsh-host-mobile-access`，作为复用现有、与传输无关的 `ctx.apiProxy` 的载体。Web bundle 默认挂载它自己的全接口 WebSocket 监听器，同时浏览器服务器仍然只绑定回环地址。该载体只接受 `session.list`、`session.history`、`session.models`、`session.selectModel`、queue 模式下包含文字及四种既有光栅图片格式的 `session.prompt`，以及载体专用的 `mobile.archivedSessions` 读取；最后一个方法只从 `workspace.list` 投影归档 Session id。它只转发该表层所需的 Session 事件、标题、运行状态、归档集合与宿主生命周期帧。Host 会先校验 allowlist 与 payload 限制，再把已接受的 Session 请求交给现有 fetch 载体，因此修改过的手机也无法绕过同样的限制或读取工作区内容。默认加密帧上限为 16 MiB；手机把图片总字节限制为 5 MiB，使 base64 膨胀与请求包络仍保持在上限内。
 
 配对采用 Orca 的 MIT 许可手机实现所使用的紧凑形式：`dsh://pair?code=<base64url JSON>` 携带直连端点、持久主机 id、bearer token 和固定的 Curve25519 公钥。主机身份保存在 `$DSH_HOME/mobile` 下仅所有者可读的文件中。主机使用操作系统默认路由选择的 IPv4 地址生成配对信息；显式 `advertiseHost` 始终优先，而无法消除歧义的多网卡环境会直接启动失败，不会打印不可用的二维码。每个 socket 都使用新的手机密钥对，派生 Curve25519 共享密钥，只在加密认证帧内发送 bearer token，并使用 XSalsa20-Poly1305 保护后续 JSON。握手期限、输入与请求上限、出站缓冲限制、socket 所有权以及由 abort 驱动的事件清理都属于载体生命周期。
 
@@ -30,7 +30,6 @@ Expo 应用是原生伴侣，而不是 Web UI 的响应式复制。它把一个�
 - 手机提示会成为桌面浏览器也能观察到的同一条持久 `user/message`，实时助手事件会在两个客户端收敛。
 - 已归档 Session 在重连后保持隐藏，并在其他客户端归档时从手机消失；手机不会收到工作区行。
 - 会话首次传输六条模型消息，并按需读取更早页。单条长消息仍可能包含许多持久流式事件。
-- 手机激活是显式的，不会削弱默认浏览器绑定，也不会暴露浏览器路由。
-- 任何能扫描当前配对二维码的人都会获得持久手机能力，直到身份文件被轮换。首版记录手动轮换与单一已保存主机，而不展示不完整的设备管理。
+- Web bundle 会自动启动手机监听，不会改变浏览器绑定，也不会暴露浏览器路由。任何能扫描当前配对二维码的人都会获得持久手机能力，直到身份文件被轮换。手机会保存多台已配对主机，并支持切换或移除。
 - 直接 `ws://` 流量会暴露连接元数据，但不会暴露已认证的应用明文。互联网传输、多配对设备撤销、Markdown／工具展示、通用文档、交互与后台通知仍属于独立工作。
 - Real-Loader 测试覆盖认证、加密 RPC、归档集合投影与事件、模型目录与选择、图片提示准入、错误 token 拒绝与清理；手机投影测试覆盖配对解析以及流式文本向最终文本的收敛。
